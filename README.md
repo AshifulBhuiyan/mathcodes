@@ -5,3 +5,5 @@
 (ill ask chatgpt to fix that later)
 
 ## Credits:
+- `mercury`
+- 
