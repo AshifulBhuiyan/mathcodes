@@ -174,10 +174,10 @@ declare module 'astro:content' {
   rendered?: RenderedContent;
   filePath?: string;
 }>;
-"test": Record<string, {
+"differential-equations": Record<string, {
   id: string;
   body?: string;
-  collection: "test";
+  collection: "differential-equations";
   data: any;
   rendered?: RenderedContent;
   filePath?: string;

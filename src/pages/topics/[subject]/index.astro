@@ -1,14 +1,21 @@
 ---
 import Layout from 'layouts/Layout.astro';
 
-// ✅ Static paths based on folder names in src/content/*
+// ✅ Extract unique subject names from file paths
 export async function getStaticPaths() {
-  const fs = await import('fs/promises');
-  const path = await import('path');
-  const contentDir = path.resolve('./src/content');
+  const mdxEntries = Object.keys(import.meta.glob('../../../content/**/*.mdx', { eager: true }));
+  const tsEntries = Object.keys(import.meta.glob('../../../content/**/*.ts', { eager: true }));
 
-  const dirEntries = await fs.readdir(contentDir, { withFileTypes: true });
-  const subjects = dirEntries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+  const allPaths = [...mdxEntries, ...tsEntries];
+
+  const subjects = Array.from(
+    new Set(
+      allPaths.map((filepath) => {
+        const parts = filepath.replace('../../../content/', '').split('/');
+        return parts[0]; // subject is the first part of path
+      })
+    )
+  );
 
   return subjects.map((subject) => ({
     params: { subject },
@@ -18,16 +25,14 @@ export async function getStaticPaths() {
 
 const { subject } = Astro.props;
 
-// ✅ Load .mdx and .ts content for this subject using glob
-const mdxPages = import.meta.glob('../../../content/**/*.mdx');
-const tsPages = import.meta.glob('../../../content/**/*.ts');
-
-const entries = Object.entries({ ...mdxPages, ...tsPages }).filter(([filepath]) =>
+// ✅ Use glob to fetch entries for this subject
+const allPages = import.meta.glob('../../../content/**/*.{mdx,ts}');
+const matchingEntries = Object.entries(allPages).filter(([filepath]) =>
   filepath.includes(`/content/${subject}/`)
 );
 
 const pages = await Promise.all(
-  entries.map(async ([filepath, loader]) => {
+  matchingEntries.map(async ([filepath, loader]) => {
     const slug = filepath.split('/').pop().replace(/\.(mdx|ts)$/, '');
     const mod = await loader();
     const frontmatter = mod.frontmatter || mod.default;
