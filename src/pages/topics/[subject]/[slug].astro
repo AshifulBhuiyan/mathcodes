@@ -2,41 +2,36 @@
 import MarkdownLayout from 'layouts/MarkdownLayout.astro';
 import MathNoteLayout from 'layouts/MathNoteLayout.astro';
 
-// Get subject and slug from the route
 const { subject, slug } = Astro.props;
 
-// Import all .mdx and .ts content using glob
-const mdxPages = import.meta.glob('../../../content/**/*.mdx');
-const tsPages = import.meta.glob('../../../content/**/*.ts');
+// Load all content (MDX + TS) eagerly at build time
+const mdxPages = import.meta.glob('../../../content/**/*.mdx', { eager: true });
+const tsPages = import.meta.glob('../../../content/**/*.ts', { eager: true });
+const allPages = { ...mdxPages, ...tsPages };
 
+// Try to find the matching page
 const mdxKey = `../../../content/${subject}/${slug}.mdx`;
 const tsKey = `../../../content/${subject}/${slug}.ts`;
+const key = allPages[mdxKey] ? mdxKey : tsKey;
 
-let frontmatter, Content, tsModule;
+const mod = allPages[key];
+if (!mod) throw new Error(`Content not found: ${subject}/${slug}`);
 
-// Prefer .mdx over .ts
-if (mdxPages[mdxKey]) {
-  const post = await mdxPages[mdxKey]();
-  frontmatter = post.frontmatter;
-  Content = post.default;
-} else if (tsPages[tsKey]) {
-  tsModule = await tsPages[tsKey]();
-} else {
-  throw new Error(`Content not found for: ${subject}/${slug}`);
-}
+const frontmatter = mod.frontmatter || mod.default;
+const Content = mod.default;
 
-// ✅ Export getStaticPaths — required for dynamic routes
+// ✅ Define paths to build
 export async function getStaticPaths() {
-  const mdxEntries = Object.keys(import.meta.glob('../../../content/**/*.mdx'));
-  const tsEntries = Object.keys(import.meta.glob('../../../content/**/*.ts'));
+  const mdxEntries = Object.keys(import.meta.glob('../../../content/**/*.mdx', { eager: true }));
+  const tsEntries = Object.keys(import.meta.glob('../../../content/**/*.ts', { eager: true }));
 
   const entries = [...mdxEntries, ...tsEntries];
 
-  const paths = entries.map((filepath) => {
+  return entries.map((filepath) => {
     const parts = filepath
-      .replace('../../../content/', '') // remove base
-      .replace(/\.(mdx|ts)$/, '')       // remove extension
-      .split('/');                      // split into [subject, slug]
+      .replace('../../../content/', '')
+      .replace(/\.(mdx|ts)$/, '')
+      .split('/');
 
     return {
       params: {
@@ -49,13 +44,11 @@ export async function getStaticPaths() {
       },
     };
   });
-
-  return paths;
 }
 ---
 
-{tsModule ? (
-  <MathNoteLayout title={tsModule.default.title} content={tsModule.default.content} />
+{key.endsWith('.ts') ? (
+  <MathNoteLayout title={frontmatter.title} content={frontmatter.content} />
 ) : (
   <MarkdownLayout title={frontmatter.title}>
     <Content />
