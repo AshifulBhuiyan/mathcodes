@@ -1,5 +1,5 @@
 /* Import KaTeX stylesheet for math rendering */
-@import "katex/dist/katex.min.css";
+/* @import "katex/dist/katex.min.css"; */
 @import "tailwindcss";
 
 
