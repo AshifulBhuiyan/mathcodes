@@ -1,0 +1,59 @@
+/* Import KaTeX stylesheet for math rendering */
+@import "katex/dist/katex.min.css";
+@import "tailwindcss";
+
+
+
+/* Base styling */
+html {
+  text-align: center;
+}
+
+body {
+  background: #21252d;
+  font-family: "Lato", sans-serif;
+  font-size: 16px;
+  color: #1b91d6;
+  line-break: auto;
+  white-space: pre-wrap;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+}
+
+/* Link styles (same color for all states) */
+a:link,
+a:visited,
+a:hover,
+a:active {
+  color: #1b91d6;
+  text-decoration: none;
+}
+
+/* Global link reset */
+a {
+    @apply no-underline text-[#1b91d6] hover:text-blue-400 hover:no-underline;
+  }
+  
+  /* Optional: ensure icon alignment inside flex containers */
+  a > .icon {
+    @apply mr-2 align-middle text-xl;
+  }
+  a.group {
+    @apply no-underline text-[#1b91d6] hover:text-blue-400 hover:no-underline;
+  }
+
+/* Make KaTeX block math centered and large enough */
+.katex-display {
+  display: block;
+  text-align: center;
+  margin: 1.5em 0;
+  font-size: 1.25em;
+}
+
+/* Scrollable math container for wide expressions */
+.math-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+  padding-bottom: 0.5em;
+}

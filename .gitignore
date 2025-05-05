@@ -1,0 +1,49 @@
+# Node modules
+node_modules/
+
+# Build output
+dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# IDE files
+.idea/
+.vscode/
+
+# Astro specific
+astro.config.mjs
+
+# Python specific
+__pycache__/
+*.py[cod]
+venv/
+env/
+.Python
+build/
+develop-eggs/
+dist/
+eggs/
+egg-info/
+.installed.cfg
+*.egg-info/
+MANIFEST
+.ipynb_checkpoints
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Byte-compiled files
+*.pyc
+*.pyo
+
+# Other
+*.swp
+*.swo

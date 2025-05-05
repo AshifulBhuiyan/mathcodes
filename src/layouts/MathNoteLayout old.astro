@@ -1,0 +1,23 @@
+---
+const { title, content } = Astro.props;
+---
+
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{title}</title>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" defer></script>
+  </head>
+  <body class="prose prose-lg mx-auto px-4 py-12">
+    <main>
+      <h1 class="text-4xl font-bold mb-6">{title}</h1>
+      <div set:html={content} />
+    </main>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", () => {
+        if (window.MathJax) MathJax.typesetPromise();
+      });
+    </script>
+  </body>
+</html>

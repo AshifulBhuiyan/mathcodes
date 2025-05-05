@@ -1,0 +1,59 @@
+---
+import Layout from 'layouts/Layout.astro';
+
+// ✅ Static paths based on folder names in src/content/*
+export async function getStaticPaths() {
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const contentDir = path.resolve('./src/content');
+
+  const dirEntries = await fs.readdir(contentDir, { withFileTypes: true });
+  const subjects = dirEntries.filter((entry) => entry.isDirectory()).map((entry) => entry.name);
+
+  return subjects.map((subject) => ({
+    params: { subject },
+    props: { subject },
+  }));
+}
+
+const { subject } = Astro.props;
+
+// ✅ Load .mdx and .ts content for this subject using glob
+const mdxPages = import.meta.glob('../../../content/**/*.mdx');
+const tsPages = import.meta.glob('../../../content/**/*.ts');
+
+const entries = Object.entries({ ...mdxPages, ...tsPages }).filter(([filepath]) =>
+  filepath.includes(`/content/${subject}/`)
+);
+
+const pages = await Promise.all(
+  entries.map(async ([filepath, loader]) => {
+    const slug = filepath.split('/').pop().replace(/\.(mdx|ts)$/, '');
+    const mod = await loader();
+    const frontmatter = mod.frontmatter || mod.default;
+
+    return {
+      slug,
+      title: frontmatter.title,
+      description: frontmatter.description,
+    };
+  })
+);
+---
+
+<Layout title={`Topics: ${subject}`}>
+  <main class="px-6 py-12 max-w-4xl mx-auto">
+    <h1 class="text-4xl font-bold mb-8 capitalize">{subject.replace('-', ' ')} Topics</h1>
+
+    <ul class="space-y-6">
+      {pages.map((page) => (
+        <li class="border p-4 rounded-lg hover:shadow">
+          <a href={`/topics/${subject}/${page.slug}`}>
+            <h2 class="text-2xl font-semibold">{page.title}</h2>
+            <p class="text-gray-600">{page.description}</p>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </main>
+</Layout>

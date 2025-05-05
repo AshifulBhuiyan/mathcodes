@@ -1,0 +1,52 @@
+---
+import fs from 'fs';
+import path from 'path';
+import Layout from 'layouts/Layout.astro';
+
+export async function getStaticPaths() {
+  const contentDir = path.resolve('./src/content');
+  const subjects = fs.readdirSync(contentDir).filter(name => {
+    const full = path.join(contentDir, name);
+    return fs.statSync(full).isDirectory();
+  });
+
+  return subjects.map(subject => ({
+    params: { subject },
+    props: { subject },
+  }));
+}
+
+const { subject } = Astro.props;
+const dir = `../../../content/${subject}`;
+const fullPath = new URL(dir, import.meta.url);
+
+// Support both .mdx and .ts files
+const files = fs.readdirSync(fullPath).filter(f => f.endsWith('.mdx') || f.endsWith('.ts'));
+
+const pages = await Promise.all(
+  files.map(async (filename) => {
+    const slug = filename.replace(/\.(mdx|ts)$/, '');
+    const mod = await import(`../../../content/${subject}/${filename}`);
+    const frontmatter = mod.frontmatter || mod.default; // .mdx has frontmatter, .ts has default
+    return {
+      slug,
+      title: frontmatter.title,
+      description: frontmatter.description,
+    };
+  })
+);
+---
+
+<Layout>  <h1 class="text-4xl font-bold mb-8 capitalize">{subject.replace('-', ' ')} Topics</h1>
+
+  <ul class="space-y-6">
+    {pages.map((page) => (
+      <li class="border p-4 rounded-lg hover:shadow">
+        <a href={`/topics/${subject}/${page.slug}`}>
+          <h2 class="text-2xl font-semibold">{page.title}</h2>
+          <p class="text-gray-600">{page.description}</p>
+        </a>
+      </li>
+    ))}
+  </ul>
+</Layout>

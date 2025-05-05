@@ -1,0 +1,51 @@
+---
+const subjects = [
+  {
+    name: "Calculus",
+    description: "Limits, derivatives, and integrals.",
+    href: "/topics/calculus",
+    icon: "∂", // or "📐"
+  },
+  {
+    name: "Complex Analysis",
+    description: "Contours, residues, and complex functions.",
+    href: "/topics/complex-analysis",
+    icon: "ℂ", // or "🔮"
+  },
+
+    {
+    name: "Differential Equations",
+    description: "Slope fields, Numerical methods, and more.",
+    href: "/topics/differential-equations",
+    icon: "∂",
+  },
+];
+
+import Layout from 'layouts/Layout.astro';
+---
+<Layout title="Explore Topics – mathcodes.org">
+  <main class="px-6 py-16 max-w-6xl mx-auto text-center">
+  <h1 class="text-4xl md:text-5xl font-extrabold mb-12 text-[#1b91d6]">
+    Explore Topics (WIP)
+  </h1>
+
+  <div class="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
+    {subjects.map((subject) => (
+      <a
+        href={subject.href}
+        class="group block rounded-xl border border-[#1b91d6] bg-[#1a1e2a] p-6 transition-all duration-200 hover:scale-[1.02] hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        <div class="flex items-center justify-center ">
+        <div class="text-2xl">{subject.icon}</div>
+        <h2 class="text-2xl font-semibold ">
+          {subject.name}
+        </h2>
+        </div>
+        <p class="text-gray-400 text-sm">{subject.description}</p>
+        
+      </a>
+    ))}
+  </div>
+</main>
+
+</Layout>
