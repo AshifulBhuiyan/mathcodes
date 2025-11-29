@@ -1,0 +1,334 @@
+---
+import Layout from 'layouts/Layout.astro';
+
+const puzzle = {
+  id: 'DC-2025-001',
+  date: '2025-02-15',
+  topic: 'limits',
+  difficulty: 'intro',
+  title: 'Daily Code-Arrange Challenge — Limit of sin(x)/x',
+  problem: 'Evaluate the limit as x → 0 of sin(x)/x.',
+  code_blocks: [
+    'return result',
+    'result = sp.limit(expr, x, 0)',
+    'x = sp.symbols(\'x\')',
+    'expr = sp.sin(x) / x',
+    'import sympy as sp',
+  ],
+  correct_order: [5, 3, 4, 2, 1],
+  expected_output: '1.0',
+  hints: [
+    'Start by declaring the symbol you want to use in the limit.',
+    'Build the expression before asking Sympy to take the limit.',
+    'Remember the classic trig limit sin(x)/x → 1 as x approaches 0.',
+  ],
+};
+---
+
+<Layout
+  title="Daily Code-Arrange Challenge | mathcodes.org"
+  description="Drag-and-drop Python snippets to solve a math puzzle — no backend, just instant feedback."
+>
+  <main class="bg-[#0f1117] text-white min-h-screen pb-24">
+    <header class="bg-gradient-to-br from-[#1b91d6] to-[#0f172a] text-white py-16 px-6 text-center">
+      <p class="uppercase tracking-widest text-sm text-blue-100 mb-3">Flagship Feature</p>
+      <h1 class="text-4xl md:text-5xl font-extrabold mb-4">Daily Code-Arrange Challenge</h1>
+      <p class="text-lg md:text-xl max-w-3xl mx-auto text-blue-100">
+        Solve today’s math prompt by arranging Python blocks in the right order. There is zero backend computation: we simply
+        reveal the precomputed output once your ordering matches.
+      </p>
+      <div class="flex flex-wrap gap-3 justify-center mt-8 text-sm uppercase font-semibold text-blue-900">
+        <span class="px-4 py-2 bg-blue-100 rounded-full">No Sandbox Needed</span>
+        <span class="px-4 py-2 bg-blue-100 rounded-full">Client-Only</span>
+        <span class="px-4 py-2 bg-blue-100 rounded-full">Replay Anytime</span>
+      </div>
+    </header>
+
+    <section class="max-w-5xl mx-auto mt-12 px-4 grid gap-6 lg:grid-cols-[2fr_1fr]">
+      <div class="bg-[#121826] border border-[#1f2a3a] rounded-2xl p-6 shadow-lg">
+        <div class="flex flex-wrap items-center gap-3 text-sm text-blue-200 mb-4">
+          <span class="px-3 py-1 bg-[#1b2738] rounded-full font-semibold">ID: {puzzle.id}</span>
+          <span class="px-3 py-1 bg-[#1b2738] rounded-full font-semibold">Date: {puzzle.date}</span>
+          <span class="px-3 py-1 bg-[#1b2738] rounded-full font-semibold">Topic: {puzzle.topic}</span>
+          <span class="px-3 py-1 bg-[#1b2738] rounded-full font-semibold">Difficulty: {puzzle.difficulty}</span>
+        </div>
+        <h2 class="text-2xl font-bold text-white mb-2">{puzzle.title}</h2>
+        <p class="text-blue-100 mb-6">{puzzle.problem}</p>
+
+        <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4 mb-6">
+          <h3 class="text-lg font-semibold mb-2 text-white">How it works</h3>
+          <ol class="list-decimal list-inside text-blue-100 space-y-1">
+            <li>Drag blocks from the tray into the arrangement panel.</li>
+            <li>Reorder until you think the Python logic is correct.</li>
+            <li>Press <strong>Run</strong> to check your ordering and reveal the precomputed output.</li>
+          </ol>
+          <p class="mt-3 text-sm text-blue-200">Nothing executes on the server. The output is stored alongside the puzzle.</p>
+        </div>
+
+        <div class="grid gap-4 lg:grid-cols-2">
+          <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg font-semibold text-white">Block Tray</h3>
+              <button type="button" class="text-sm text-blue-200 underline" data-shuffle>Shuffle</button>
+            </div>
+            <p class="text-blue-200 text-sm mb-2">Drag from here into your ordering. Blocks stay available until placed.</p>
+            <ul class="space-y-2" data-tray></ul>
+          </div>
+
+          <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="text-lg font-semibold text-white">Your Arrangement</h3>
+              <button type="button" class="text-sm text-blue-200 underline" data-reset>Reset</button>
+            </div>
+            <p class="text-blue-200 text-sm mb-2">Reorder as needed. We’ll validate the full sequence.</p>
+            <ul class="space-y-2 min-h-[200px]" data-arrangement></ul>
+          </div>
+        </div>
+
+        <div class="mt-6 bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4 space-y-4">
+          <div class="flex flex-wrap gap-3 items-center">
+            <button
+              type="button"
+              class="px-5 py-3 rounded-xl bg-[#1b91d6] text-[#0b0d14] font-semibold hover:bg-[#4db3f2] transition"
+              data-run
+            >
+              Run (Check Ordering)
+            </button>
+            <span class="text-blue-200 text-sm">Attempts: <strong data-attempts>0</strong></span>
+            <button
+              type="button"
+              class="px-4 py-2 rounded-lg border border-[#1b91d6] text-[#1b91d6] text-sm font-semibold hover:bg-[#1b91d6] hover:text-[#0b0d14] transition"
+              data-hint
+            >
+              Reveal Hint
+            </button>
+          </div>
+
+          <div class="bg-[#111827] border border-[#1f2a3a] rounded-lg p-4">
+            <p class="text-sm uppercase tracking-widest text-blue-300 mb-2">Outcome</p>
+            <p class="text-white font-semibold mb-2" data-feedback>Arrange the blocks and hit Run to see how you did.</p>
+            <div class="text-sm text-blue-200 space-y-1">
+              <p><span class="font-semibold">Expected Output:</span> <span data-output>Hidden until you run</span></p>
+              <p><span class="font-semibold">Progress:</span> <span data-progress>0 / {puzzle.code_blocks.length} blocks placed</span></p>
+            </div>
+          </div>
+
+          <div class="bg-[#111827] border border-[#1f2a3a] rounded-lg p-4">
+            <p class="text-sm uppercase tracking-widest text-blue-300 mb-2">Hints</p>
+            <ul class="list-disc list-inside text-blue-100 space-y-1" data-hints></ul>
+          </div>
+        </div>
+      </div>
+
+      <aside class="bg-[#121826] border border-[#1f2a3a] rounded-2xl p-6 shadow-lg space-y-5">
+        <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4">
+          <h3 class="text-lg font-semibold text-white mb-2">Why this hook works</h3>
+          <p class="text-blue-100 text-sm leading-relaxed">
+            The daily arrangeable puzzle keeps users returning without any backend compute or sandboxing. Everything is static,
+            client-only, and still reinforces the “code proves the math” ethos through ordering logic.
+          </p>
+        </div>
+        <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4 space-y-3">
+          <h3 class="text-lg font-semibold text-white">Roadmap</h3>
+          <ul class="text-blue-100 text-sm space-y-2">
+            <li><strong>Phase 1:</strong> One puzzle, inline data, instant feedback.</li>
+            <li><strong>Phase 2:</strong> Load YAML/JSON puzzles for daily rotation.</li>
+            <li><strong>Phase 3:</strong> Add timer, streaks, and shareable results stored in localStorage.</li>
+          </ul>
+        </div>
+        <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4 space-y-3">
+          <h3 class="text-lg font-semibold text-white">Content Format</h3>
+          <p class="text-blue-100 text-sm">Puzzles stay human-authored and live as static data. A sample YAML:</p>
+          <pre class="bg-[#0f172a] text-blue-100 text-xs p-3 rounded-lg overflow-x-auto"><code>id: DC-2025-001
+date: 2025-02-15
+topic: limits
+problem: Evaluate the limit as x → 0 of sin(x)/x.
+code_blocks:
+  - "return result"
+  - "result = sp.limit(expr, x, 0)"
+  - "x = sp.symbols('x')"
+  - "expr = sp.sin(x) / x"
+  - "import sympy as sp"
+correct_order:
+  - 5
+  - 3
+  - 4
+  - 2
+  - 1
+expected_output: "1.0"
+</code></pre>
+        </div>
+      </aside>
+    </section>
+  </main>
+
+  <script is:inline>
+    const puzzle = ${JSON.stringify(puzzle)};
+
+    const blockMap = puzzle.code_blocks.map((text, index) => ({ id: `block-${index}`, text }));
+    const correctIds = puzzle.correct_order.map((i) => `block-${i - 1}`);
+
+    const trayList = document.querySelector('[data-tray]');
+    const arrangementList = document.querySelector('[data-arrangement]');
+    const shuffleButton = document.querySelector('[data-shuffle]');
+    const resetButton = document.querySelector('[data-reset]');
+    const runButton = document.querySelector('[data-run]');
+    const attemptsEl = document.querySelector('[data-attempts]');
+    const feedbackEl = document.querySelector('[data-feedback]');
+    const outputEl = document.querySelector('[data-output]');
+    const progressEl = document.querySelector('[data-progress]');
+    const hintButton = document.querySelector('[data-hint]');
+    const hintsList = document.querySelector('[data-hints]');
+
+    let trayOrder = shuffle([...blockMap.map((b) => b.id)]);
+    let arrangementOrder = [];
+    let attempts = 0;
+    let hintIndex = 0;
+
+    function shuffle(list) {
+      const arr = [...list];
+      for (let i = arr.length - 1; i > 0; i -= 1) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function renderList(container, order) {
+      container.innerHTML = '';
+      order.forEach((id) => {
+        const block = blockMap.find((b) => b.id === id);
+        const li = document.createElement('li');
+        li.className =
+          'cursor-move bg-[#111827] border border-[#1f2a3a] rounded-lg px-3 py-2 text-left text-blue-100 shadow hover:border-[#1b91d6] transition';
+        li.draggable = true;
+        li.dataset.id = id;
+        li.innerHTML = `<code class="text-xs md:text-sm">${escapeHtml(block.text)}</code>`;
+        li.addEventListener('dragstart', (event) => {
+          event.dataTransfer.setData('text/plain', id);
+          event.dataTransfer.effectAllowed = 'move';
+        });
+        container.appendChild(li);
+      });
+    }
+
+    function removeFromOrders(id) {
+      trayOrder = trayOrder.filter((b) => b !== id);
+      arrangementOrder = arrangementOrder.filter((b) => b !== id);
+    }
+
+    function getDragAfterElement(container, y) {
+      const elements = [...container.querySelectorAll('li')];
+      return elements
+        .map((element) => {
+          const box = element.getBoundingClientRect();
+          const offset = y - box.top - box.height / 2;
+          return { element, offset };
+        })
+        .filter(({ offset }) => offset < 0)
+        .sort((a, b) => a.offset - b.offset)[0]?.element;
+    }
+
+    function insertInto(targetOrder, id, afterElement) {
+      if (!afterElement) {
+        targetOrder.unshift(id);
+        return;
+      }
+      const index = targetOrder.indexOf(afterElement.dataset.id) + 1;
+      targetOrder.splice(index, 0, id);
+    }
+
+    function orderFor(name) {
+      return name === 'tray' ? trayOrder : arrangementOrder;
+    }
+
+    function handleDrop(event, container, targetKey) {
+      event.preventDefault();
+      const id = event.dataTransfer.getData('text/plain');
+      if (!id) return;
+      removeFromOrders(id);
+      const afterElement = getDragAfterElement(container, event.clientY);
+      insertInto(orderFor(targetKey), id, afterElement);
+      renderAll();
+    }
+
+    function renderAll() {
+      renderList(trayList, trayOrder);
+      renderList(arrangementList, arrangementOrder);
+      progressEl.textContent = `${arrangementOrder.length} / ${puzzle.code_blocks.length} blocks placed`;
+      setupContainer(trayList, 'tray');
+      setupContainer(arrangementList, 'arrangement');
+    }
+
+    function setupContainer(container, targetKey) {
+      if (container.dataset.bound === targetKey) return;
+      container.dataset.bound = targetKey;
+      container.addEventListener('dragover', (event) => {
+        event.preventDefault();
+      });
+      container.addEventListener('drop', (event) => handleDrop(event, container, targetKey));
+    }
+
+    function resetPuzzle() {
+      trayOrder = shuffle([...blockMap.map((b) => b.id)]);
+      arrangementOrder = [];
+      feedbackEl.textContent = 'Arrange the blocks and hit Run to see how you did.';
+      outputEl.textContent = 'Hidden until you run';
+      attempts = 0;
+      attemptsEl.textContent = '0';
+      renderAll();
+    }
+
+    function revealHint() {
+      if (hintIndex >= puzzle.hints.length) return;
+      const item = document.createElement('li');
+      item.textContent = puzzle.hints[hintIndex];
+      hintsList.appendChild(item);
+      hintIndex += 1;
+      if (hintIndex >= puzzle.hints.length) {
+        hintButton.disabled = true;
+        hintButton.textContent = 'All hints revealed';
+        hintButton.classList.add('opacity-60', 'cursor-not-allowed');
+      }
+    }
+
+    function runCheck() {
+      if (arrangementOrder.length !== blockMap.length) {
+        feedbackEl.textContent = 'Place all blocks before running the check.';
+        progressEl.textContent = `${arrangementOrder.length} / ${puzzle.code_blocks.length} blocks placed`;
+        return;
+      }
+
+      attempts += 1;
+      attemptsEl.textContent = attempts;
+      const isCorrect = arrangementOrder.every((id, idx) => id === correctIds[idx]);
+      feedbackEl.textContent = isCorrect
+        ? '✅ Correct ordering! This matches the intended solution.'
+        : '❌ Not yet. Adjust the order until the logic flows correctly.';
+      outputEl.textContent = `Output: ${puzzle.expected_output}`;
+    }
+
+    shuffleButton.addEventListener('click', () => {
+      trayOrder = shuffle(trayOrder);
+      renderAll();
+    });
+
+    resetButton.addEventListener('click', () => {
+      hintIndex = 0;
+      hintsList.innerHTML = '';
+      hintButton.disabled = false;
+      hintButton.textContent = 'Reveal Hint';
+      hintButton.classList.remove('opacity-60', 'cursor-not-allowed');
+      resetPuzzle();
+    });
+
+    runButton.addEventListener('click', runCheck);
+    hintButton.addEventListener('click', revealHint);
+
+    renderAll();
+  </script>
+</Layout>

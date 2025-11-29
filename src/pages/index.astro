@@ -6,27 +6,92 @@ import Layout from 'layouts/Layout.astro';
   <main class="min-h-screen flex flex-col justify-center items-center px-6 text-center bg-[#21252d] text-[#1b91d6]">
     <h1 class="text-5xl md:text-7xl font-extrabold mb-6 leading-tight">
       Mathematics,<br />
-      Done with Code.
+      Verified by Python.
     </h1>
 
     <p class="text-lg md:text-xl max-w-2xl mb-8 text-[#8ecae6]">
-      Code-powered explanations and visual intuition.
+      Human-authored math challenges where only Python solutions count and every submission is checked by deterministic tests.
     </p>
 
-<a
-  href="/topics"
-  class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-200 text-blue-700 text-lg rounded-xl hover:bg-blue-300 transition font-semibold shadow-md"
->
-  <span class="text-xl">🚀</span>
-  <span>Start Exploring</span>
-</a>
+    <div class="flex flex-col md:flex-row gap-3 items-center">
+      <a
+        href="/topics"
+        class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-blue-200 text-blue-700 text-lg rounded-xl hover:bg-blue-300 transition font-semibold shadow-md"
+      >
+        <span class="text-xl">🚀</span>
+        <span>Start Exploring</span>
+      </a>
+
+      <a
+        href="/daily-challenge"
+        class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-[#0f1117] border border-blue-200 text-blue-100 text-lg rounded-xl hover:bg-blue-200 hover:text-[#0f1117] transition font-semibold shadow-md"
+      >
+        <span class="text-xl">🧩</span>
+        <span>Try the Daily Code-Arrange</span>
+      </a>
+
+      <a
+        href="/system-spec"
+        class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-transparent border border-blue-200 text-blue-200 text-lg rounded-xl hover:bg-blue-200 hover:text-blue-800 transition font-semibold"
+      >
+        <span class="text-xl">📜</span>
+        <span>Read the System Rules</span>
+      </a>
+    </div>
   </main>
 
   <section class="bg-[#1a1d26] py-16 text-white text-center px-4">
     <h2 class="text-3xl font-bold mb-6">What is MathCodes?</h2>
     <p class="max-w-3xl mx-auto text-lg text-gray-300">
       MathCodes is an open project designed to help you learn math through computation, visual intuition, and curiosity.
+      Every problem is validated with Python—not prose—and follows a transparent specification.
     </p>
+  </section>
+
+  <section class="bg-[#0f1117] py-16 px-4 text-white">
+    <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-8 items-center">
+      <div class="bg-[#121826] border border-[#1f2a3a] rounded-2xl p-6 shadow-lg">
+        <p class="text-sm uppercase tracking-widest text-blue-200 mb-2">New • No Backend Needed</p>
+        <h3 class="text-2xl font-bold mb-3">Daily Code-Arrange Challenge</h3>
+        <p class="text-gray-300 mb-4">
+          Drag Python blocks into the correct order to solve a human-authored math prompt. When you hit run, we simply reveal
+          the stored output—no sandboxing or execution required. It’s a Wordle-style hook for mathematical thinking.
+        </p>
+        <ul class="text-gray-200 text-sm space-y-2 list-disc list-inside mb-4">
+          <li>Instant feedback without server compute</li>
+          <li>Teaches logical flow and math structure</li>
+          <li>Ready for daily rotations and streaks</li>
+        </ul>
+        <a
+          href="/daily-challenge"
+          class="inline-flex items-center justify-center gap-2 px-5 py-3 bg-[#1b91d6] text-[#0b0d14] text-base rounded-xl hover:bg-[#4db3f2] transition font-semibold shadow"
+        >
+          <span class="text-lg">🧩</span>
+          <span>Play today’s puzzle</span>
+        </a>
+      </div>
+
+      <div class="bg-[#121826] border border-[#1f2a3a] rounded-2xl p-6 shadow-lg flex flex-col gap-4">
+        <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-4">
+          <p class="text-sm text-blue-200 uppercase tracking-widest mb-1">Example prompt</p>
+          <h4 class="text-lg font-semibold text-white mb-2">Limit as x → 0 of sin(x)/x</h4>
+          <p class="text-gray-300 text-sm">
+            Blocks: declare x, build sin(x)/x, ask Sympy for the limit, return the result. The expected output (1.0) is shown
+            only after you place everything correctly.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 text-sm text-gray-200">
+          <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-3">
+            <p class="font-semibold text-white">Daily replay</p>
+            <p class="text-gray-300">Puzzles can refresh from YAML/JSON without backend changes.</p>
+          </div>
+          <div class="bg-[#0b0d14] border border-[#1f2a3a] rounded-xl p-3">
+            <p class="font-semibold text-white">Shareable wins</p>
+            <p class="text-gray-300">Add streaks, timers, and copyable results for virality.</p>
+          </div>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="bg-[#282c34] py-16 px-4 text-white">
@@ -37,11 +102,11 @@ import Layout from 'layouts/Layout.astro';
       </div>
       <div class="bg-[#1f2937] p-6 rounded-xl shadow">
         <h3 class="text-xl font-bold mb-2">📘 Structured Notes</h3>
-        <p class="text-gray-300">Explore carefully written python notes on topics like calculus, differential equations, statistics and more.</p>
+        <p class="text-gray-300">Explore carefully written Python notes on topics like calculus, differential equations, statistics and more.</p>
       </div>
       <div class="bg-[#1f2937] p-6 rounded-xl shadow">
         <h3 class="text-xl font-bold mb-2">💡 Code-Driven Learning</h3>
-        <p class="text-gray-300">Use Python, C, C++, Java, or whatever to learn by doing—build simulations and solve problems.</p>
+        <p class="text-gray-300">Solve human-authored problems by writing Python only—each submission is sandboxed and validated against deterministic tests.</p>
       </div>
     </div>
   </section>
