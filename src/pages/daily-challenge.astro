@@ -157,7 +157,13 @@ code_blocks: [...]`}              </code>
 
         <div class="space-y-3">
           <p class="text-blue-100">Drag and drop the blocks until they represent a valid solution. The order shown below is intentionally mixed.</p>
-          <ul id="block-list" class="space-y-3" aria-label="code blocks" data-initial-order={initialOrder.join(',')}>
+          <ul
+            id="block-list"
+            class="space-y-3"
+            aria-label="code blocks"
+            data-initial-order={initialOrder.join(',')}
+            data-correct-order={remappedCorrectOrder.join(',')}
+          >
             {displayBlocks.map((block) => (
               <li
                 class="bg-[#0e1422] border border-[#2c3f64] rounded-xl p-4 flex items-start gap-3 shadow hover:border-blue-500 transition cursor-move"
@@ -263,8 +269,8 @@ code_blocks: [...]`}              </code>
           .filter((val) => Number.isFinite(val))
       : [];
 
-  function getDatasetOrder() {
-    const attrOrder = list?.dataset.initialOrder;
+  function getDatasetOrder(attrName) {
+    const attrOrder = attrName && list ? list.dataset[attrName] : undefined;
     if (!attrOrder) return [];
     return attrOrder
       .split(',')
@@ -281,7 +287,7 @@ code_blocks: [...]`}              </code>
 
     const idSet = new Set(blockIds);
 
-    const datasetOrder = getDatasetOrder();
+    const datasetOrder = getDatasetOrder('initialOrder');
     const parsedInitial = toNumberArray(puzzle.initialOrder);
     const initialOrder = (() => {
       if (parsedInitial.length === blockIds.length && parsedInitial.every((id) => idSet.has(id))) {
@@ -294,8 +300,11 @@ code_blocks: [...]`}              </code>
     })();
 
     const parsedCorrect = toNumberArray(puzzle.correctOrder);
+    const datasetCorrect = getDatasetOrder('correctOrder');
     const normalizedCorrect = [];
-    for (const val of parsedCorrect) {
+    const correctSource = parsedCorrect.length ? parsedCorrect : datasetCorrect;
+
+    for (const val of correctSource) {
       if (idSet.has(val) && !normalizedCorrect.includes(val)) {
         normalizedCorrect.push(val);
       }
