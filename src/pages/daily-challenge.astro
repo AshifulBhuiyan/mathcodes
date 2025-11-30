@@ -256,10 +256,14 @@ code_blocks: [...]`}              </code>
     console.error('Daily challenge failed to boot: missing list element.');
   }
 
-  function ensureInitialOrder() {
-    if (puzzle.initialOrder && puzzle.initialOrder.length) {
-      return puzzle.initialOrder.map((val) => Number(val)).filter((val) => Number.isFinite(val));
-    }
+  const toNumberArray = (value) =>
+    Array.isArray(value)
+      ? value
+          .map((val) => Number(val))
+          .filter((val) => Number.isFinite(val))
+      : [];
+
+  function getDatasetOrder() {
     const attrOrder = list?.dataset.initialOrder;
     if (!attrOrder) return [];
     return attrOrder
@@ -268,53 +272,54 @@ code_blocks: [...]`}              </code>
       .filter((val) => Number.isFinite(val));
   }
 
-  function getValidBlockIds() {
-    if (Array.isArray(puzzle.codeBlocks) && puzzle.codeBlocks.length) {
-      return puzzle.codeBlocks
-        .map((block) => Number((block && block.id) ?? block))
-        .filter((val) => Number.isFinite(val));
-    }
-
-    if (list?.children?.length) {
-      return Array.from(list.children)
-        .map((child) => Number(child.dataset.index))
-        .filter((val) => Number.isFinite(val));
-    }
-
-    return [];
-  }
-
-  function normalizePuzzle() {
-    const fallbackOrder = ensureInitialOrder();
-    const validIds = getValidBlockIds();
-    const validSet = new Set(validIds);
-
-    const parsedCorrect = Array.isArray(puzzle.correctOrder)
-      ? puzzle.correctOrder.map((val) => Number(val)).filter((val) => Number.isFinite(val))
+  function buildNormalizedPuzzle() {
+    const blockIds = Array.isArray(puzzle.codeBlocks)
+      ? puzzle.codeBlocks
+          .map((block) => Number((block && block.id) ?? block))
+          .filter((val) => Number.isFinite(val))
       : [];
 
+    const idSet = new Set(blockIds);
+
+    const datasetOrder = getDatasetOrder();
+    const parsedInitial = toNumberArray(puzzle.initialOrder);
+    const initialOrder = (() => {
+      if (parsedInitial.length === blockIds.length && parsedInitial.every((id) => idSet.has(id))) {
+        return parsedInitial;
+      }
+      if (datasetOrder.length === blockIds.length && datasetOrder.every((id) => idSet.has(id))) {
+        return datasetOrder;
+      }
+      return blockIds;
+    })();
+
+    const parsedCorrect = toNumberArray(puzzle.correctOrder);
     const normalizedCorrect = [];
     for (const val of parsedCorrect) {
-      if (validSet.has(val) && !normalizedCorrect.includes(val)) {
+      if (idSet.has(val) && !normalizedCorrect.includes(val)) {
         normalizedCorrect.push(val);
       }
     }
 
-    const hasCompleteOrder = normalizedCorrect.length === validIds.length && validIds.length > 0;
-    const normalizedInitial = fallbackOrder.length ? fallbackOrder : getCurrentOrder();
+    const hasCompleteOrder =
+      normalizedCorrect.length === blockIds.length &&
+      normalizedCorrect.length === new Set(normalizedCorrect).size &&
+      normalizedCorrect.every((val) => idSet.has(val));
+
     const expectedOutput =
       typeof puzzle.expectedOutput === 'string' && puzzle.expectedOutput.trim().length
         ? puzzle.expectedOutput
         : outputEl?.dataset.expectedOutput || 'No output available';
 
-    puzzle = {
-      ...puzzle,
+    return {
+      blockIds,
       correctOrder: hasCompleteOrder ? normalizedCorrect : [],
-      initialOrder: normalizedInitial,
       expectedOutput,
-      validIds,
+      initialOrder,
     };
   }
+
+  const normalizedPuzzle = buildNormalizedPuzzle();
 
   function startTimer() {
     const start = Date.now();
@@ -357,9 +362,7 @@ code_blocks: [...]`}              </code>
   }
 
   function handleRun() {
-    normalizePuzzle();
-
-    if (!puzzle.correctOrder || !Array.isArray(puzzle.correctOrder) || !puzzle.correctOrder.length) {
+    if (!normalizedPuzzle.correctOrder.length) {
       setStatus('Puzzle data is missing—please refresh and try again.');
       return;
     }
@@ -374,16 +377,20 @@ code_blocks: [...]`}              </code>
 
     const currentOrder = getCurrentOrder();
     const hasAllBlocks =
-      currentOrder.length === puzzle.validIds.length && currentOrder.every((val) => puzzle.validIds.includes(val));
+      currentOrder.length === normalizedPuzzle.blockIds.length &&
+      currentOrder.length === new Set(currentOrder).size &&
+      currentOrder.every((val) => normalizedPuzzle.blockIds.includes(val));
 
     if (!hasAllBlocks) {
       setStatus('Some blocks are missing or duplicated—reset and try again.');
       return;
     }
 
-    const isCorrect = currentOrder.every((val, idx) => val === puzzle.correctOrder[idx]);
+    const isCorrect =
+      currentOrder.length === normalizedPuzzle.correctOrder.length &&
+      currentOrder.every((val, idx) => val === normalizedPuzzle.correctOrder[idx]);
 
-    outputEl.textContent = puzzle.expectedOutput;
+    outputEl.textContent = normalizedPuzzle.expectedOutput;
 
     if (isCorrect) {
       setStatus('Nice! The blocks are in the right order.');
@@ -396,9 +403,7 @@ code_blocks: [...]`}              </code>
   }
 
   function handleReset() {
-    normalizePuzzle();
-    const order = ensureInitialOrder();
-    applyOrder(order);
+    applyOrder(normalizedPuzzle.initialOrder);
     attempts = 0;
     attemptsEl.textContent = 'Attempts: 0';
     setStatus('Arrange the blocks, then tap Run to check.');
@@ -453,8 +458,7 @@ code_blocks: [...]`}              </code>
   });
 
   wireDragAndDrop();
-  normalizePuzzle();
-  applyOrder(ensureInitialOrder());
+  applyOrder(normalizedPuzzle.initialOrder);
   startTimer();
 </script>
 
