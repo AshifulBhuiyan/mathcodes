@@ -60,6 +60,7 @@ const puzzleForClient = {
   expectedOutput: typedPuzzle.expected_output,
   hints: typedPuzzle.hints,
   initialOrder,
+  validIds: blocksWithIds.map((block) => block.id),
 };
 ---
 
@@ -371,13 +372,12 @@ code_blocks: [...]`}              </code>
   }
 
   function handleRun() {
-    if (!normalizedPuzzle.correctOrder.length) {
-      setStatus('Puzzle data is missing—please refresh and try again.');
-      return;
-    }
+    const hasCompleteData =
+      normalizedPuzzle.blockIds.length > 0 &&
+      normalizedPuzzle.correctOrder.length === normalizedPuzzle.blockIds.length;
 
-    if (!puzzle.validIds || puzzle.correctOrder.length !== puzzle.validIds.length) {
-      setStatus('Puzzle validation failed—please refresh the page.');
+    if (!hasCompleteData) {
+      setStatus('Puzzle data is missing—please refresh and try again.');
       return;
     }
 
