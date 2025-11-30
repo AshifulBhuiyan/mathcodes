@@ -36,22 +36,26 @@ const typedPuzzle = (() => {
   return allPuzzles[randomIndex];
 })();
 
-const displayBlocks = [...typedPuzzle.code_blocks].slice().reverse();
+const blocksWithIds = typedPuzzle.code_blocks.map((block, index) => ({
+  id: index + 1,
+  text: block,
+}));
+
+const displayBlocks = [...blocksWithIds].sort(() => Math.random() - 0.5);
 
 const remappedCorrectOrder = Array.isArray(typedPuzzle.correct_order)
   ? typedPuzzle.correct_order
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value))
-      .map((index) => displayBlocks.length - index + 1)
   : [];
 
-const initialOrder = displayBlocks.map((_, index) => index + 1);
+const initialOrder = displayBlocks.map((block) => block.id);
 const puzzleForClient = {
   id: typedPuzzle.id,
   date: typedPuzzle.date,
   topic: typedPuzzle.topic,
   problem: typedPuzzle.problem,
-  codeBlocks: displayBlocks,
+  codeBlocks: blocksWithIds,
   correctOrder: remappedCorrectOrder,
   expectedOutput: typedPuzzle.expected_output,
   hints: typedPuzzle.hints,
@@ -154,14 +158,14 @@ code_blocks: [...]`}              </code>
         <div class="space-y-3">
           <p class="text-blue-100">Drag and drop the blocks until they represent a valid solution. The order shown below is intentionally mixed.</p>
           <ul id="block-list" class="space-y-3" aria-label="code blocks" data-initial-order={initialOrder.join(',')}>
-            {displayBlocks.map((block, index) => (
+            {displayBlocks.map((block) => (
               <li
                 class="bg-[#0e1422] border border-[#2c3f64] rounded-xl p-4 flex items-start gap-3 shadow hover:border-blue-500 transition cursor-move"
                 draggable="true"
-                data-index={index + 1}
+                data-index={block.id}
               >
                 <span class="text-sm text-blue-200 px-2 py-1 rounded-full bg-[#1c2740] border border-[#2c3f64]" aria-hidden="true">Block</span>
-                <code class="text-blue-50 text-left whitespace-pre">{block}</code>
+                <code class="text-blue-50 text-left whitespace-pre">{block.text}</code>
               </li>
             ))}
           </ul>
@@ -252,10 +256,14 @@ code_blocks: [...]`}              </code>
     console.error('Daily challenge failed to boot: missing list element.');
   }
 
-  function ensureInitialOrder() {
-    if (puzzle.initialOrder && puzzle.initialOrder.length) {
-      return puzzle.initialOrder.map((val) => Number(val)).filter((val) => Number.isFinite(val));
-    }
+  const toNumberArray = (value) =>
+    Array.isArray(value)
+      ? value
+          .map((val) => Number(val))
+          .filter((val) => Number.isFinite(val))
+      : [];
+
+  function getDatasetOrder() {
     const attrOrder = list?.dataset.initialOrder;
     if (!attrOrder) return [];
     return attrOrder
@@ -264,26 +272,54 @@ code_blocks: [...]`}              </code>
       .filter((val) => Number.isFinite(val));
   }
 
-  function normalizePuzzle() {
-    const fallbackOrder = ensureInitialOrder();
-    const parsedCorrect = Array.isArray(puzzle.correctOrder)
-      ? puzzle.correctOrder.map((val) => Number(val)).filter((val) => Number.isFinite(val))
+  function buildNormalizedPuzzle() {
+    const blockIds = Array.isArray(puzzle.codeBlocks)
+      ? puzzle.codeBlocks
+          .map((block) => Number((block && block.id) ?? block))
+          .filter((val) => Number.isFinite(val))
       : [];
 
-    const normalizedCorrect = parsedCorrect.length ? parsedCorrect : fallbackOrder;
-    const normalizedInitial = fallbackOrder.length ? fallbackOrder : getCurrentOrder();
+    const idSet = new Set(blockIds);
+
+    const datasetOrder = getDatasetOrder();
+    const parsedInitial = toNumberArray(puzzle.initialOrder);
+    const initialOrder = (() => {
+      if (parsedInitial.length === blockIds.length && parsedInitial.every((id) => idSet.has(id))) {
+        return parsedInitial;
+      }
+      if (datasetOrder.length === blockIds.length && datasetOrder.every((id) => idSet.has(id))) {
+        return datasetOrder;
+      }
+      return blockIds;
+    })();
+
+    const parsedCorrect = toNumberArray(puzzle.correctOrder);
+    const normalizedCorrect = [];
+    for (const val of parsedCorrect) {
+      if (idSet.has(val) && !normalizedCorrect.includes(val)) {
+        normalizedCorrect.push(val);
+      }
+    }
+
+    const hasCompleteOrder =
+      normalizedCorrect.length === blockIds.length &&
+      normalizedCorrect.length === new Set(normalizedCorrect).size &&
+      normalizedCorrect.every((val) => idSet.has(val));
+
     const expectedOutput =
       typeof puzzle.expectedOutput === 'string' && puzzle.expectedOutput.trim().length
         ? puzzle.expectedOutput
         : outputEl?.dataset.expectedOutput || 'No output available';
 
-    puzzle = {
-      ...puzzle,
-      correctOrder: normalizedCorrect,
-      initialOrder: normalizedInitial,
+    return {
+      blockIds,
+      correctOrder: hasCompleteOrder ? normalizedCorrect : [],
       expectedOutput,
+      initialOrder,
     };
   }
+
+  const normalizedPuzzle = buildNormalizedPuzzle();
 
   function startTimer() {
     const start = Date.now();
@@ -326,9 +362,7 @@ code_blocks: [...]`}              </code>
   }
 
   function handleRun() {
-    normalizePuzzle();
-
-    if (!puzzle.correctOrder || !Array.isArray(puzzle.correctOrder) || !puzzle.correctOrder.length) {
+    if (!normalizedPuzzle.correctOrder.length) {
       setStatus('Puzzle data is missing—please refresh and try again.');
       return;
     }
@@ -337,11 +371,21 @@ code_blocks: [...]`}              </code>
     attemptsEl.textContent = `Attempts: ${attempts}`;
 
     const currentOrder = getCurrentOrder();
-    const isCorrect =
-      currentOrder.length === puzzle.correctOrder.length &&
-      currentOrder.every((val, idx) => val === puzzle.correctOrder[idx]);
+    const hasAllBlocks =
+      currentOrder.length === normalizedPuzzle.blockIds.length &&
+      currentOrder.length === new Set(currentOrder).size &&
+      currentOrder.every((val) => normalizedPuzzle.blockIds.includes(val));
 
-    outputEl.textContent = puzzle.expectedOutput;
+    if (!hasAllBlocks) {
+      setStatus('Some blocks are missing or duplicated—reset and try again.');
+      return;
+    }
+
+    const isCorrect =
+      currentOrder.length === normalizedPuzzle.correctOrder.length &&
+      currentOrder.every((val, idx) => val === normalizedPuzzle.correctOrder[idx]);
+
+    outputEl.textContent = normalizedPuzzle.expectedOutput;
 
     if (isCorrect) {
       setStatus('Nice! The blocks are in the right order.');
@@ -354,9 +398,7 @@ code_blocks: [...]`}              </code>
   }
 
   function handleReset() {
-    normalizePuzzle();
-    const order = ensureInitialOrder();
-    applyOrder(order);
+    applyOrder(normalizedPuzzle.initialOrder);
     attempts = 0;
     attemptsEl.textContent = 'Attempts: 0';
     setStatus('Arrange the blocks, then tap Run to check.');
@@ -411,8 +453,7 @@ code_blocks: [...]`}              </code>
   });
 
   wireDragAndDrop();
-  normalizePuzzle();
-  applyOrder(ensureInitialOrder());
+  applyOrder(normalizedPuzzle.initialOrder);
   startTimer();
 </script>
 
