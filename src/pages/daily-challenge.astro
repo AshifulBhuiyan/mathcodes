@@ -1,4 +1,6 @@
 ---
+export const prerender = false;
+
 import Layout from 'layouts/Layout.astro';
 
 type PuzzleData = {
@@ -12,29 +14,51 @@ type PuzzleData = {
   hints: string[];
 };
 
-const puzzleModules = import.meta.glob('../data/daily-challenge-*.json', {
-  eager: true,
-});
+const puzzleModules = import.meta.glob('../data/daily-challenge-*.json', { eager: true });
 
 const allPuzzles = Object.values(puzzleModules)
   .map((module) => (module as { default: PuzzleData }).default)
   .sort((a, b) => a.date.localeCompare(b.date));
 
-const todayIso = new Date().toISOString().slice(0, 10);
+const todayIso = new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(new Date());
 
-const typedPuzzle = (() => {
-  const exact = allPuzzles.find((entry) => entry.date === todayIso);
-  if (exact) return exact;
+const selection = (() => {
+  const playablePuzzles = allPuzzles.filter((entry) => entry.date <= todayIso);
+  const todaysPuzzle = playablePuzzles.find((entry) => entry.date === todayIso);
 
-  const pastPuzzles = allPuzzles.filter((entry) => entry.date < todayIso);
-  if (pastPuzzles.length > 0) {
-    const randomIndex = Math.floor(Math.random() * pastPuzzles.length);
-    return pastPuzzles[randomIndex];
+  if (todaysPuzzle) {
+    return { puzzle: todaysPuzzle, isFallback: false, message: null } as const;
   }
 
-  const randomIndex = Math.floor(Math.random() * allPuzzles.length);
-  return allPuzzles[randomIndex];
+  if (playablePuzzles.length > 0) {
+    const latestPast = playablePuzzles.reduce((latest, current) =>
+      current.date > latest.date ? current : latest,
+    );
+    return {
+      puzzle: latestPast,
+      isFallback: true,
+      message: 'Showing a past puzzle because today is not scheduled yet.',
+    } as const;
+  }
+
+  return {
+    puzzle: null,
+    isFallback: true,
+    message: 'No puzzle is available yet. Check back soon!',
+  } as const;
 })();
+
+const typedPuzzle: PuzzleData =
+  selection.puzzle ?? {
+    id: 'placeholder',
+    date: todayIso,
+    topic: 'Coming soon',
+    problem: 'No daily puzzle is scheduled for today. Please check back later.',
+    code_blocks: ['We are preparing new challenges.'],
+    correct_order: [1],
+    expected_output: 'No output available',
+    hints: ['Come back soon for the next puzzle.'],
+  };
 
 const blocksWithIds = typedPuzzle.code_blocks.map((block, index) => ({
   id: index + 1,
@@ -61,6 +85,7 @@ const puzzleForClient = {
   hints: typedPuzzle.hints,
   initialOrder,
   validIds: blocksWithIds.map((block) => block.id),
+  isFallback: selection.isFallback,
 };
 ---
 
@@ -78,6 +103,12 @@ const puzzleForClient = {
         Drag and arrange the shuffled Python blocks to reconstruct a correct solution. When you "run" it, you see the
         pre-stored expected output—no sandboxing, no backend compute. Practice math logic with instant, low-friction feedback.
       </p>
+      {selection.message && (
+        <div class="max-w-3xl mx-auto rounded-2xl border border-yellow-300/40 bg-yellow-500/10 px-4 py-3 text-yellow-100 text-left">
+          <p class="font-semibold">Scheduling note</p>
+          <p class="text-sm leading-relaxed">{selection.message}</p>
+        </div>
+      )}
       <div class="flex flex-col md:flex-row gap-3 justify-center">
         <a
           href="/daily-challenge"
