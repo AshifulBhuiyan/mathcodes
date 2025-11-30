@@ -1,8 +1,7 @@
 ---
 import Layout from 'layouts/Layout.astro';
-import puzzle from '../data/daily-challenge-2025-02-15.json';
 
-const typedPuzzle = puzzle as {
+type PuzzleData = {
   id: string;
   date: string;
   topic: string;
@@ -13,8 +12,36 @@ const typedPuzzle = puzzle as {
   hints: string[];
 };
 
+const puzzleModules = import.meta.glob('../data/daily-challenge-*.json', {
+  eager: true,
+});
+
+const allPuzzles = Object.values(puzzleModules)
+  .map((module) => (module as { default: PuzzleData }).default)
+  .sort((a, b) => a.date.localeCompare(b.date));
+
+const todayIso = new Date().toISOString().slice(0, 10);
+
+const typedPuzzle = (() => {
+  const exact = allPuzzles.find((entry) => entry.date === todayIso);
+  if (exact) return exact;
+
+  const pastPuzzles = allPuzzles.filter((entry) => entry.date < todayIso);
+  if (pastPuzzles.length > 0) {
+    const randomIndex = Math.floor(Math.random() * pastPuzzles.length);
+    return pastPuzzles[randomIndex];
+  }
+
+  const randomIndex = Math.floor(Math.random() * allPuzzles.length);
+  return allPuzzles[randomIndex];
+})();
+
 const initialOrder = typedPuzzle.code_blocks.map((_, index) => index + 1);
 const puzzleForClient = {
+  id: typedPuzzle.id,
+  date: typedPuzzle.date,
+  topic: typedPuzzle.topic,
+  problem: typedPuzzle.problem,
   codeBlocks: typedPuzzle.code_blocks,
   correctOrder: typedPuzzle.correct_order,
   expectedOutput: typedPuzzle.expected_output,
@@ -164,7 +191,13 @@ code_blocks: [...]`}              </code>
           <p class="text-lg font-semibold text-blue-50" data-status>Arrange the blocks, then tap Run to check.</p>
           <div class="rounded-lg bg-[#0e1628] border border-[#223455] p-3">
             <p class="text-sm uppercase tracking-wide text-blue-200">Displayed output</p>
-            <pre class="text-blue-50 text-lg" data-output>—</pre>
+            <pre
+              class="text-blue-50 text-lg"
+              data-output
+              data-expected-output={typedPuzzle.expected_output}
+            >
+              —
+            </pre>
           </div>
           <div class="rounded-lg bg-[#0e1628] border border-[#223455] p-3 hidden" data-hint-panel>
             <p class="text-sm uppercase tracking-wide text-blue-200">Hint</p>
@@ -184,7 +217,13 @@ code_blocks: [...]`}              </code>
 
 <script is:inline>
   const puzzleDataEl = document.getElementById('puzzle-data');
-  const puzzle = puzzleDataEl ? JSON.parse(puzzleDataEl.textContent || '{}') : {};
+  let puzzle = {};
+
+  try {
+    puzzle = puzzleDataEl ? JSON.parse(puzzleDataEl.textContent || '{}') : {};
+  } catch (error) {
+    console.error('Failed to parse puzzle data', error);
+  }
 
   const list = document.getElementById('block-list');
   const runButton = document.querySelector('[data-run]');
@@ -199,6 +238,43 @@ code_blocks: [...]`}              </code>
   let attempts = 0;
   let draggedItem = null;
   let timerInterval = null;
+
+  if (!list) {
+    console.error('Daily challenge failed to boot: missing list element.');
+  }
+
+  function ensureInitialOrder() {
+    if (puzzle.initialOrder && puzzle.initialOrder.length) {
+      return puzzle.initialOrder.map((val) => Number(val)).filter((val) => Number.isFinite(val));
+    }
+    const attrOrder = list?.dataset.initialOrder;
+    if (!attrOrder) return [];
+    return attrOrder
+      .split(',')
+      .map((value) => Number(value.trim()))
+      .filter((val) => Number.isFinite(val));
+  }
+
+  function normalizePuzzle() {
+    const fallbackOrder = ensureInitialOrder();
+    const parsedCorrect = Array.isArray(puzzle.correctOrder)
+      ? puzzle.correctOrder.map((val) => Number(val)).filter((val) => Number.isFinite(val))
+      : [];
+
+    const normalizedCorrect = parsedCorrect.length ? parsedCorrect : fallbackOrder;
+    const normalizedInitial = fallbackOrder.length ? fallbackOrder : getCurrentOrder();
+    const expectedOutput =
+      typeof puzzle.expectedOutput === 'string' && puzzle.expectedOutput.trim().length
+        ? puzzle.expectedOutput
+        : outputEl?.dataset.expectedOutput || 'No output available';
+
+    puzzle = {
+      ...puzzle,
+      correctOrder: normalizedCorrect,
+      initialOrder: normalizedInitial,
+      expectedOutput,
+    };
+  }
 
   function startTimer() {
     const start = Date.now();
@@ -220,10 +296,12 @@ code_blocks: [...]`}              </code>
   }
 
   function getCurrentOrder() {
+    if (!list) return [];
     return Array.from(list.children).map((child) => Number(child.dataset.index));
   }
 
   function applyOrder(order) {
+    if (!list) return;
     const items = Array.from(list.children);
     const map = new Map(items.map((item) => [Number(item.dataset.index), item]));
     order.forEach((id) => {
@@ -239,11 +317,19 @@ code_blocks: [...]`}              </code>
   }
 
   function handleRun() {
+    normalizePuzzle();
+
+    if (!puzzle.correctOrder || !Array.isArray(puzzle.correctOrder) || !puzzle.correctOrder.length) {
+      setStatus('Puzzle data is missing—please refresh and try again.');
+      return;
+    }
+
     attempts += 1;
     attemptsEl.textContent = `Attempts: ${attempts}`;
 
     const currentOrder = getCurrentOrder();
-    const isCorrect = currentOrder.length === puzzle.correctOrder.length &&
+    const isCorrect =
+      currentOrder.length === puzzle.correctOrder.length &&
       currentOrder.every((val, idx) => val === puzzle.correctOrder[idx]);
 
     outputEl.textContent = puzzle.expectedOutput;
@@ -259,7 +345,9 @@ code_blocks: [...]`}              </code>
   }
 
   function handleReset() {
-    applyOrder(puzzle.initialOrder);
+    normalizePuzzle();
+    const order = ensureInitialOrder();
+    applyOrder(order);
     attempts = 0;
     attemptsEl.textContent = 'Attempts: 0';
     setStatus('Arrange the blocks, then tap Run to check.');
@@ -270,11 +358,16 @@ code_blocks: [...]`}              </code>
   }
 
   function wireDragAndDrop() {
+    if (!list) return;
+
     list.addEventListener('dragstart', (event) => {
       draggedItem = event.target.closest('li');
       if (!draggedItem) return;
       draggedItem.classList.add('opacity-60', 'border-blue-400');
-      event.dataTransfer.effectAllowed = 'move';
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', draggedItem.dataset.index || '');
+      }
     });
 
     list.addEventListener('dragend', () => {
@@ -295,6 +388,10 @@ code_blocks: [...]`}              </code>
         target.before(draggedItem);
       }
     });
+
+    list.addEventListener('drop', (event) => {
+      event.preventDefault();
+    });
   }
 
   runButton?.addEventListener('click', handleRun);
@@ -305,6 +402,8 @@ code_blocks: [...]`}              </code>
   });
 
   wireDragAndDrop();
+  normalizePuzzle();
+  applyOrder(ensureInitialOrder());
   startTimer();
 </script>
 

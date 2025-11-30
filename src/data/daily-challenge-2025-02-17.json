@@ -1,0 +1,20 @@
+{
+  "id": "DC-2025-003",
+  "date": "2025-02-17",
+  "topic": "integration",
+  "problem": "Evaluate the definite integral of 3x^2 from 0 to 1.",
+  "code_blocks": [
+    "return result",
+    "result = sp.integrate(expr, (x, 0, 1))",
+    "expr = 3 * x**2",
+    "x = sp.symbols('x')",
+    "import sympy as sp"
+  ],
+  "correct_order": [5, 4, 3, 2, 1],
+  "expected_output": "1",
+  "hints": [
+    "Remember to integrate over the interval, not symbolically.",
+    "Set up the symbol before defining the polynomial.",
+    "sp.integrate accepts the expression and a tuple defining bounds."
+  ]
+}

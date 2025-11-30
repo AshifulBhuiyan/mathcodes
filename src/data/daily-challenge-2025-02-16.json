@@ -1,0 +1,20 @@
+{
+  "id": "DC-2025-002",
+  "date": "2025-02-16",
+  "topic": "derivatives",
+  "problem": "Compute the derivative of x^3 at x = 2.",
+  "code_blocks": [
+    "return derivative.subs(x, 2)",
+    "x = sp.symbols('x')",
+    "derivative = sp.diff(expr, x)",
+    "expr = x**3",
+    "import sympy as sp"
+  ],
+  "correct_order": [5, 2, 4, 3, 1],
+  "expected_output": "12",
+  "hints": [
+    "Take the derivative before substituting a value.",
+    "Declare the symbol before building the polynomial expression.",
+    "Use sp.diff to differentiate with respect to the symbol."
+  ]
+}

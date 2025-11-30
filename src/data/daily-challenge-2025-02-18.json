@@ -1,0 +1,20 @@
+{
+  "id": "DC-2025-004",
+  "date": "2025-02-18",
+  "topic": "quadratic equations",
+  "problem": "Find the positive root of x^2 - 3x - 10 = 0.",
+  "code_blocks": [
+    "roots = sp.solve(expr, x)",
+    "return max(roots)",
+    "x = sp.symbols('x')",
+    "expr = x**2 - 3 * x - 10",
+    "import sympy as sp"
+  ],
+  "correct_order": [5, 3, 4, 1, 2],
+  "expected_output": "5",
+  "hints": [
+    "Solve the quadratic before selecting the desired root.",
+    "Make sure the symbol is created before constructing the expression.",
+    "The positive root is the larger value returned by sp.solve."
+  ]
+}
