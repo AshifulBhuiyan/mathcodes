@@ -207,7 +207,13 @@ code_blocks: [...]`}              </code>
 
 <script is:inline>
   const puzzleDataEl = document.getElementById('puzzle-data');
-  const puzzle = puzzleDataEl ? JSON.parse(puzzleDataEl.textContent || '{}') : {};
+  let puzzle = {};
+
+  try {
+    puzzle = puzzleDataEl ? JSON.parse(puzzleDataEl.textContent || '{}') : {};
+  } catch (error) {
+    console.error('Failed to parse puzzle data', error);
+  }
 
   const list = document.getElementById('block-list');
   const runButton = document.querySelector('[data-run]');
@@ -222,6 +228,20 @@ code_blocks: [...]`}              </code>
   let attempts = 0;
   let draggedItem = null;
   let timerInterval = null;
+
+  if (!list || !puzzle.correctOrder || !Array.isArray(puzzle.correctOrder) || !puzzle.initialOrder) {
+    console.error('Daily challenge failed to boot: missing list element or puzzle data.');
+  }
+
+  function ensureInitialOrder() {
+    if (puzzle.initialOrder && puzzle.initialOrder.length) return puzzle.initialOrder;
+    const attrOrder = list?.dataset.initialOrder;
+    if (!attrOrder) return [];
+    return attrOrder
+      .split(',')
+      .map((value) => Number(value.trim()))
+      .filter((val) => Number.isFinite(val));
+  }
 
   function startTimer() {
     const start = Date.now();
@@ -243,10 +263,12 @@ code_blocks: [...]`}              </code>
   }
 
   function getCurrentOrder() {
+    if (!list) return [];
     return Array.from(list.children).map((child) => Number(child.dataset.index));
   }
 
   function applyOrder(order) {
+    if (!list) return;
     const items = Array.from(list.children);
     const map = new Map(items.map((item) => [Number(item.dataset.index), item]));
     order.forEach((id) => {
@@ -262,11 +284,14 @@ code_blocks: [...]`}              </code>
   }
 
   function handleRun() {
+    if (!puzzle.correctOrder || !Array.isArray(puzzle.correctOrder)) return;
+
     attempts += 1;
     attemptsEl.textContent = `Attempts: ${attempts}`;
 
     const currentOrder = getCurrentOrder();
-    const isCorrect = currentOrder.length === puzzle.correctOrder.length &&
+    const isCorrect =
+      currentOrder.length === puzzle.correctOrder.length &&
       currentOrder.every((val, idx) => val === puzzle.correctOrder[idx]);
 
     outputEl.textContent = puzzle.expectedOutput;
@@ -282,7 +307,8 @@ code_blocks: [...]`}              </code>
   }
 
   function handleReset() {
-    applyOrder(puzzle.initialOrder);
+    const order = ensureInitialOrder();
+    applyOrder(order);
     attempts = 0;
     attemptsEl.textContent = 'Attempts: 0';
     setStatus('Arrange the blocks, then tap Run to check.');
@@ -293,11 +319,16 @@ code_blocks: [...]`}              </code>
   }
 
   function wireDragAndDrop() {
+    if (!list) return;
+
     list.addEventListener('dragstart', (event) => {
       draggedItem = event.target.closest('li');
       if (!draggedItem) return;
       draggedItem.classList.add('opacity-60', 'border-blue-400');
-      event.dataTransfer.effectAllowed = 'move';
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData('text/plain', draggedItem.dataset.index || '');
+      }
     });
 
     list.addEventListener('dragend', () => {
@@ -318,6 +349,10 @@ code_blocks: [...]`}              </code>
         target.before(draggedItem);
       }
     });
+
+    list.addEventListener('drop', (event) => {
+      event.preventDefault();
+    });
   }
 
   runButton?.addEventListener('click', handleRun);
@@ -328,6 +363,7 @@ code_blocks: [...]`}              </code>
   });
 
   wireDragAndDrop();
+  applyOrder(ensureInitialOrder());
   startTimer();
 </script>
 
