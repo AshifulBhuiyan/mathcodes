@@ -1,0 +1,234 @@
+---
+import Layout from 'layouts/Layout.astro';
+import dailyChallenge from '../utils/dailyChallengeData';
+---
+
+<Layout title="Daily Code-Arrange Challenge | mathcodes.org">
+  <main class="min-h-screen bg-[#0f1219] text-white">
+    <section class="max-w-5xl mx-auto px-6 py-14 text-center">
+      <p class="text-sm uppercase tracking-[0.3em] text-[#8ecae6]">New flagship feature</p>
+      <h1 class="text-4xl md:text-5xl font-extrabold mt-4 mb-4">Daily Code-Arrange Challenge (Math Wordle)</h1>
+      <p class="text-lg text-gray-200 max-w-3xl mx-auto">
+        Arrange shuffled Python blocks to solve a tiny math puzzle. No sandbox, no backend—just a lightweight,
+        client-side way to practice mathematical thinking every day.
+      </p>
+      <div class="flex flex-col md:flex-row gap-3 justify-center mt-8">
+        <a href="/" class="px-5 py-3 rounded-lg bg-[#1b91d6] text-[#0c111a] font-semibold shadow-md hover:translate-y-[-2px] transition">Back to home</a>
+        <a href="/system-spec" class="px-5 py-3 rounded-lg border border-[#2b6ea3] text-[#8ecae6] font-semibold hover:bg-[#1a2d3f] transition">Read platform rules</a>
+      </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-6 grid md:grid-cols-3 gap-6">
+      <div class="bg-[#1a1f29] border border-[#2b2f3d] rounded-xl p-5 shadow-lg">
+        <h3 class="text-xl font-bold mb-2">Zero backend complexity</h3>
+        <p class="text-gray-300 text-sm">Everything runs client-side. Output is pre-stored and revealed when blocks are ordered correctly.</p>
+      </div>
+      <div class="bg-[#1a1f29] border border-[#2b2f3d] rounded-xl p-5 shadow-lg">
+        <h3 class="text-xl font-bold mb-2">Daily return hook</h3>
+        <p class="text-gray-300 text-sm">A new challenge each day encourages streaks, timed solves, and sharing—no login required.</p>
+      </div>
+      <div class="bg-[#1a1f29] border border-[#2b2f3d] rounded-xl p-5 shadow-lg">
+        <h3 class="text-xl font-bold mb-2">Math-first puzzles</h3>
+        <p class="text-gray-300 text-sm">Blocks focus on mathematical structure and symbolic steps rather than syntax trivia.</p>
+      </div>
+    </section>
+
+    <section class="max-w-5xl mx-auto px-6 mt-10 mb-16">
+      <div class="bg-[#121621] border border-[#2b2f3d] rounded-2xl p-6 shadow-xl">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
+          <div>
+            <p class="text-sm text-gray-400 uppercase tracking-wide">Today's puzzle · {dailyChallenge.date}</p>
+            <h2 class="text-2xl font-bold">{dailyChallenge.problem}</h2>
+            <p class="text-sm text-[#8ecae6]">Topic: {dailyChallenge.topic}</p>
+          </div>
+          <div class="flex gap-2 flex-wrap justify-start md:justify-end">
+            <span class="px-3 py-1 rounded-full bg-[#1b91d6]/20 text-[#8ecae6] text-xs font-semibold">Arrange the blocks</span>
+            <span class="px-3 py-1 rounded-full bg-[#7ae582]/20 text-[#7ae582] text-xs font-semibold">No execution</span>
+            <span class="px-3 py-1 rounded-full bg-[#fca311]/15 text-[#ffb703] text-xs font-semibold">Output is mocked</span>
+          </div>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-6">
+          <div class="bg-[#0f131c] border border-[#1e2433] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-lg font-semibold">Block bank</h3>
+              <span class="text-xs text-gray-500">Drag from here</span>
+            </div>
+            <div id="block-bank" class="flex flex-col gap-3" aria-label="Code block bank"></div>
+            <p class="text-xs text-gray-500 mt-3">Blocks start shuffled. Drag them into your arrangement area.</p>
+          </div>
+
+          <div class="bg-[#0f131c] border border-[#1e2433] rounded-xl p-4">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="text-lg font-semibold">Your arrangement</h3>
+              <span class="text-xs text-gray-500">Drop blocks to build the solution</span>
+            </div>
+            <div
+              id="arrangement"
+              class="min-h-[240px] flex flex-col gap-3 border-2 border-dashed border-[#243047] rounded-lg p-3 bg-[#0c1017]"
+              aria-label="Arrangement area"
+            ></div>
+            <p class="text-xs text-gray-500 mt-3">Reorder anytime by dragging. You can drop a block back to the bank to reset it.</p>
+          </div>
+        </div>
+
+        <div class="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div class="flex gap-2 flex-wrap">
+            {dailyChallenge.hints.map((hint, idx) => (
+              <span class="px-3 py-2 rounded-full bg-[#1e2433] text-[#8ecae6] text-xs" aria-label={`Hint ${idx + 1}`}>
+                💡 Hint {idx + 1}: {hint}
+              </span>
+            ))}
+          </div>
+          <button
+            id="check-order"
+            class="px-5 py-3 bg-[#7ae582] text-[#0c111a] font-semibold rounded-lg shadow-md hover:translate-y-[-1px] transition"
+          >
+            Run (Reveal Expected Output)
+          </button>
+        </div>
+
+        <div class="mt-6 bg-[#0f131c] border border-[#1e2433] rounded-xl p-4">
+          <div class="flex items-center gap-2 text-[#7ae582] font-semibold" id="status-text">
+            Ready to solve. Drag blocks into your arrangement, then click Run.
+          </div>
+          <pre id="output-pane" class="mt-3 text-sm text-[#e9ecef] bg-[#0c1017] border border-[#1e2433] rounded-lg p-3 whitespace-pre-wrap">Expected output will appear here after a correct arrangement.</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="application/json" id="daily-challenge-data">{JSON.stringify(dailyChallenge)}</script>
+
+  <script type="module">
+    const puzzle = JSON.parse(document.getElementById('daily-challenge-data').textContent || '{}');
+
+    const bankEl = document.getElementById('block-bank');
+    const arrangementEl = document.getElementById('arrangement');
+    const statusText = document.getElementById('status-text');
+    const outputPane = document.getElementById('output-pane');
+    const checkBtn = document.getElementById('check-order');
+
+    const state = {
+      bank: [...puzzle.codeBlocks],
+      arranged: [],
+    };
+
+    function createBlock(block, source) {
+      const el = document.createElement('div');
+      el.className =
+        'arranged-block cursor-move select-none px-3 py-2 rounded-lg bg-[#1b91d6]/15 border border-[#2b6ea3] text-left text-sm text-[#e9ecef] shadow-sm';
+      el.textContent = block.text;
+      el.draggable = true;
+      el.dataset.id = String(block.id);
+      el.dataset.source = source;
+      el.addEventListener('dragstart', (e) => onDragStart(e, source, block.id));
+      el.addEventListener('dragover', (e) => e.preventDefault());
+      el.addEventListener('drop', (e) => onDropOnBlock(e, block.id));
+      return el;
+    }
+
+    function render() {
+      bankEl.innerHTML = '';
+      arrangementEl.innerHTML = '';
+
+      state.bank.forEach((block) => {
+        const el = createBlock(block, 'bank');
+        bankEl.appendChild(el);
+      });
+
+      if (state.arranged.length === 0) {
+        const ghost = document.createElement('div');
+        ghost.className = 'text-sm text-gray-500 text-center py-10 border border-dashed border-[#243047] rounded-lg';
+        ghost.textContent = 'Drop blocks here in the order you think solves the problem.';
+        arrangementEl.appendChild(ghost);
+      } else {
+        state.arranged.forEach((block) => {
+          const el = createBlock(block, 'arranged');
+          arrangementEl.appendChild(el);
+        });
+      }
+    }
+
+    function onDragStart(event, from, blockId) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('application/json', JSON.stringify({ from, blockId }));
+    }
+
+    function onDropOnBlock(event, targetBlockId) {
+      event.preventDefault();
+      const payload = safeParse(event.dataTransfer.getData('application/json'));
+      if (!payload) return;
+      const insertIndex = state.arranged.findIndex((b) => b.id === targetBlockId);
+      applyMove(payload, insertIndex);
+    }
+
+    function onDropInArea(event) {
+      event.preventDefault();
+      const payload = safeParse(event.dataTransfer.getData('application/json'));
+      if (!payload) return;
+      applyMove(payload, state.arranged.length);
+    }
+
+    function applyMove(payload, insertIndex) {
+      if (payload.from === 'bank') {
+        const idx = state.bank.findIndex((b) => b.id === payload.blockId);
+        if (idx === -1) return;
+        const [block] = state.bank.splice(idx, 1);
+        state.arranged.splice(insertIndex, 0, block);
+      } else {
+        const currentIndex = state.arranged.findIndex((b) => b.id === payload.blockId);
+        if (currentIndex === -1) return;
+        const [block] = state.arranged.splice(currentIndex, 1);
+        const adjustedIndex = currentIndex < insertIndex ? insertIndex - 1 : insertIndex;
+        state.arranged.splice(adjustedIndex, 0, block);
+      }
+      statusText.textContent = 'Blocks updated. Click Run to check.';
+      outputPane.textContent = 'Expected output will appear here after a correct arrangement.';
+      render();
+    }
+
+    function safeParse(str) {
+      try {
+        return JSON.parse(str);
+      } catch (err) {
+        return null;
+      }
+    }
+
+    arrangementEl.addEventListener('dragover', (e) => e.preventDefault());
+    arrangementEl.addEventListener('drop', onDropInArea);
+
+    bankEl.addEventListener('dragover', (e) => e.preventDefault());
+    bankEl.addEventListener('drop', (event) => {
+      event.preventDefault();
+      const payload = safeParse(event.dataTransfer.getData('application/json'));
+      if (!payload || payload.from !== 'arranged') return;
+      const idx = state.arranged.findIndex((b) => b.id === payload.blockId);
+      if (idx === -1) return;
+      const [block] = state.arranged.splice(idx, 1);
+      state.bank.push(block);
+      statusText.textContent = 'Block returned to bank.';
+      outputPane.textContent = 'Expected output will appear here after a correct arrangement.';
+      render();
+    });
+
+    checkBtn.addEventListener('click', () => {
+      if (state.arranged.length !== puzzle.correctOrder.length) {
+        statusText.textContent = 'Arrange all blocks before checking.';
+        return;
+      }
+      const arrangedIds = state.arranged.map((b) => b.id);
+      const isCorrect = arrangedIds.every((id, idx) => id === puzzle.correctOrder[idx]);
+      if (isCorrect) {
+        statusText.textContent = '✅ Correct! Here is the expected output.';
+        outputPane.textContent = puzzle.expectedOutput;
+      } else {
+        const misplaced = arrangedIds.filter((id, idx) => id !== puzzle.correctOrder[idx]).length;
+        statusText.textContent = `❌ Not quite. ${misplaced} block${misplaced === 1 ? '' : 's'} in the wrong spot.`;
+      }
+    });
+
+    render();
+  </script>
+</Layout>
