@@ -1,0 +1,20 @@
+{
+  "id": "DC-2025-001",
+  "date": "2025-02-15",
+  "topic": "limits",
+  "problem": "Evaluate the limit as x → 0 of sin(x)/x.",
+  "code_blocks": [
+    "return result",
+    "result = sp.limit(expr, x, 0)",
+    "x = sp.symbols('x')",
+    "expr = sp.sin(x) / x",
+    "import sympy as sp"
+  ],
+  "correct_order": [5, 3, 4, 2, 1],
+  "expected_output": "1.0",
+  "hints": [
+    "Recall the standard sine-over-x limit from calculus.",
+    "Declare your symbol before constructing the expression.",
+    "The limit call needs both the expression and the symbol."
+  ]
+}

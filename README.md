@@ -6,6 +6,7 @@
 
 - 📚 Python notebooks on core courses and topics
 - 🧠 A curated library of human-authored math problems across topics and difficulty levels
+- 🧩 Daily Code-Arrange Challenge (Math Wordle) with zero-backend, drag-and-drop play
 - 🔒 Python-only submissions validated by deterministic test harnesses
 - 🧑‍🎓 User accounts, XP, badges, and solution history
 - 💬 Problem discussions and community insights
