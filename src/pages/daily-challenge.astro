@@ -36,13 +36,12 @@ const typedPuzzle = (() => {
   return allPuzzles[randomIndex];
 })();
 
-const displayBlocks = [...typedPuzzle.code_blocks].slice().reverse();
+const displayBlocks = [...typedPuzzle.code_blocks];
 
 const remappedCorrectOrder = Array.isArray(typedPuzzle.correct_order)
   ? typedPuzzle.correct_order
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value))
-      .map((index) => displayBlocks.length - index + 1)
   : [];
 
 const initialOrder = displayBlocks.map((_, index) => index + 1);
