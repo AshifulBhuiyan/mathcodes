@@ -367,6 +367,11 @@ code_blocks: [...]`}              </code>
       return;
     }
 
+    if (!puzzle.validIds || puzzle.correctOrder.length !== puzzle.validIds.length) {
+      setStatus('Puzzle validation failed—please refresh the page.');
+      return;
+    }
+
     attempts += 1;
     attemptsEl.textContent = `Attempts: ${attempts}`;
 
