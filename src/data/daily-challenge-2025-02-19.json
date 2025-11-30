@@ -1,0 +1,19 @@
+{
+  "id": "DC-2025-005",
+  "date": "2025-02-19",
+  "topic": "series",
+  "problem": "Sum the first six terms of the geometric series with initial term 3 and ratio 1/2.",
+  "code_blocks": [
+    "return total",
+    "total = sum(terms)",
+    "terms = [3 * (0.5 ** n) for n in range(6)]",
+    "import math"
+  ],
+  "correct_order": [4, 3, 2, 1],
+  "expected_output": "5.8125",
+  "hints": [
+    "Generate the sequence before attempting to sum it.",
+    "There are six terms starting with the 0th power.",
+    "Use Python's built-in sum once the list is ready."
+  ]
+}

@@ -1,8 +1,7 @@
 ---
 import Layout from 'layouts/Layout.astro';
-import puzzle from '../data/daily-challenge-2025-02-15.json';
 
-const typedPuzzle = puzzle as {
+type PuzzleData = {
   id: string;
   date: string;
   topic: string;
@@ -13,8 +12,32 @@ const typedPuzzle = puzzle as {
   hints: string[];
 };
 
+const puzzleModules = import.meta.glob('../data/daily-challenge-*.json', {
+  eager: true,
+});
+
+const allPuzzles = Object.values(puzzleModules)
+  .map((module) => (module as { default: PuzzleData }).default)
+  .sort((a, b) => a.date.localeCompare(b.date));
+
+const todayIso = new Date().toISOString().slice(0, 10);
+
+const typedPuzzle = (() => {
+  const exact = allPuzzles.find((entry) => entry.date === todayIso);
+  if (exact) return exact;
+
+  const pastPuzzles = allPuzzles.filter((entry) => entry.date <= todayIso);
+  if (pastPuzzles.length > 0) return pastPuzzles[pastPuzzles.length - 1];
+
+  return allPuzzles[allPuzzles.length - 1];
+})();
+
 const initialOrder = typedPuzzle.code_blocks.map((_, index) => index + 1);
 const puzzleForClient = {
+  id: typedPuzzle.id,
+  date: typedPuzzle.date,
+  topic: typedPuzzle.topic,
+  problem: typedPuzzle.problem,
   codeBlocks: typedPuzzle.code_blocks,
   correctOrder: typedPuzzle.correct_order,
   expectedOutput: typedPuzzle.expected_output,
