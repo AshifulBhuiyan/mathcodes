@@ -36,14 +36,23 @@ const typedPuzzle = (() => {
   return allPuzzles[randomIndex];
 })();
 
-const initialOrder = typedPuzzle.code_blocks.map((_, index) => index + 1);
+const displayBlocks = [...typedPuzzle.code_blocks].slice().reverse();
+
+const remappedCorrectOrder = Array.isArray(typedPuzzle.correct_order)
+  ? typedPuzzle.correct_order
+      .map((value) => Number(value))
+      .filter((value) => Number.isFinite(value))
+      .map((index) => displayBlocks.length - index + 1)
+  : [];
+
+const initialOrder = displayBlocks.map((_, index) => index + 1);
 const puzzleForClient = {
   id: typedPuzzle.id,
   date: typedPuzzle.date,
   topic: typedPuzzle.topic,
   problem: typedPuzzle.problem,
-  codeBlocks: typedPuzzle.code_blocks,
-  correctOrder: typedPuzzle.correct_order,
+  codeBlocks: displayBlocks,
+  correctOrder: remappedCorrectOrder,
   expectedOutput: typedPuzzle.expected_output,
   hints: typedPuzzle.hints,
   initialOrder,
@@ -145,7 +154,7 @@ code_blocks: [...]`}              </code>
         <div class="space-y-3">
           <p class="text-blue-100">Drag and drop the blocks until they represent a valid solution. The order shown below is intentionally mixed.</p>
           <ul id="block-list" class="space-y-3" aria-label="code blocks" data-initial-order={initialOrder.join(',')}>
-            {typedPuzzle.code_blocks.map((block, index) => (
+            {displayBlocks.map((block, index) => (
               <li
                 class="bg-[#0e1422] border border-[#2c3f64] rounded-xl p-4 flex items-start gap-3 shadow hover:border-blue-500 transition cursor-move"
                 draggable="true"
