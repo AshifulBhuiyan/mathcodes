@@ -36,22 +36,26 @@ const typedPuzzle = (() => {
   return allPuzzles[randomIndex];
 })();
 
-const displayBlocks = [...typedPuzzle.code_blocks].slice().reverse();
+const blocksWithIds = typedPuzzle.code_blocks.map((block, index) => ({
+  id: index + 1,
+  text: block,
+}));
+
+const displayBlocks = [...blocksWithIds].sort(() => Math.random() - 0.5);
 
 const remappedCorrectOrder = Array.isArray(typedPuzzle.correct_order)
   ? typedPuzzle.correct_order
       .map((value) => Number(value))
       .filter((value) => Number.isFinite(value))
-      .map((index) => displayBlocks.length - index + 1)
   : [];
 
-const initialOrder = displayBlocks.map((_, index) => index + 1);
+const initialOrder = displayBlocks.map((block) => block.id);
 const puzzleForClient = {
   id: typedPuzzle.id,
   date: typedPuzzle.date,
   topic: typedPuzzle.topic,
   problem: typedPuzzle.problem,
-  codeBlocks: displayBlocks,
+  codeBlocks: blocksWithIds,
   correctOrder: remappedCorrectOrder,
   expectedOutput: typedPuzzle.expected_output,
   hints: typedPuzzle.hints,
@@ -154,14 +158,14 @@ code_blocks: [...]`}              </code>
         <div class="space-y-3">
           <p class="text-blue-100">Drag and drop the blocks until they represent a valid solution. The order shown below is intentionally mixed.</p>
           <ul id="block-list" class="space-y-3" aria-label="code blocks" data-initial-order={initialOrder.join(',')}>
-            {displayBlocks.map((block, index) => (
+            {displayBlocks.map((block) => (
               <li
                 class="bg-[#0e1422] border border-[#2c3f64] rounded-xl p-4 flex items-start gap-3 shadow hover:border-blue-500 transition cursor-move"
                 draggable="true"
-                data-index={index + 1}
+                data-index={block.id}
               >
                 <span class="text-sm text-blue-200 px-2 py-1 rounded-full bg-[#1c2740] border border-[#2c3f64]" aria-hidden="true">Block</span>
-                <code class="text-blue-50 text-left whitespace-pre">{block}</code>
+                <code class="text-blue-50 text-left whitespace-pre">{block.text}</code>
               </li>
             ))}
           </ul>
